@@ -23,7 +23,7 @@ type Forecast struct {
 	} `json:"current"`
 }
 
-func GetCurrentWeather(lat, lon float64) (domain.Today, error) {
+func getCurrentWeather(lat, lon float64) (domain.Today, error) {
 	forecast := Forecast{}
 	today := domain.Today{}
 	url := fmt.Sprintf("https://api.open-meteo.com/v1/forecast?latitude=%f&longitude=%f&current=temperature_2m&current=apparent_temperature&current=weather_code&wind_speed_unit=ms&current=wind_speed_10m&current=wind_direction_10m&current=relative_humidity_2m&current=pressure_msl&current=visibility&current=precipitation", lat, lon)
