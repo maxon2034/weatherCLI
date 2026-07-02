@@ -15,7 +15,7 @@ type apiResponse struct {
 	}
 }
 
-func Geocode(city string) (name string, lat, lon float64, err error) {
+func geocode(city string) (name string, lat, lon float64, err error) {
 	apiResponse := apiResponse{}
 	url := "https://geocoding-api.open-meteo.com/v1/search?name=" + city
 	resp, err := http.Get(url)
