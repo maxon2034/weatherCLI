@@ -24,6 +24,10 @@ type HourlyEntry struct {
 }
 
 type DailyEntry struct {
-	Date     time.Time
-	TempMinC float64
+	Date        time.Time
+	TempMinC    float64
+	TempMaxC    float64
+	POPPercent  int
+	WindSpeedMS float64
+	Condition   string
 }
