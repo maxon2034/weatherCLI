@@ -1,10 +1,11 @@
 package config
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
+
+	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
@@ -13,7 +14,7 @@ type Config struct {
 
 func Load() (Config, error) {
 	conf := Config{}
-	confFile := "C:/Dev/praxiscode/weatherCLI/internal/config/conf.json"
+	confFile := "C:/Dev/praxiscode/weatherCLI/internal/config/conf.yaml"
 	_, err := os.Stat(confFile)
 
 	if err != nil {
@@ -27,7 +28,7 @@ func Load() (Config, error) {
 		return Config{}, fmt.Errorf("Error in reading configuration file: ", err)
 	}
 
-	err = json.Unmarshal(confText, &conf)
+	err = yaml.Unmarshal(confText, &conf)
 	if err != nil {
 		return Config{}, fmt.Errorf("Error in deserializing json: ", err)
 	}
@@ -36,8 +37,8 @@ func Load() (Config, error) {
 }
 
 func Save(cfg Config) error {
-	confFile := "C:/Dev/praxiscode/weatherCLI/internal/config/conf.json"
-	confText, err := json.Marshal(cfg)
+	confFile := "C:/Dev/praxiscode/weatherCLI/internal/config/conf.yaml"
+	confText, err := yaml.Marshal(cfg)
 	if err != nil {
 		return fmt.Errorf("error in serealizing configuration: ", err)
 	}
