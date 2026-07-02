@@ -1,19 +1,27 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"weatherCLI/internal/config"
+	"os"
+	"weatherCLI/internal/domain"
+	"weatherCLI/internal/provider/openmeteo"
 )
 
 func main() {
-	confSave := config.Config{DefaultCity: "Brest"}
-	err := config.Save(confSave)
+	todayForecast := domain.Today{}
+	name, lat, lon, err := openmeteo.Geocode("Minsk")
+
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("error in locating city:", err)
 	}
-	confLoad, err := config.Load()
+
+	todayForecast, err = openmeteo.GetCurrentWeather(lat, lon)
+	todayForecast.City = name
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println("error in generating todays forecast: ", err)
 	}
-	fmt.Println(confLoad)
+	fmt.Println(todayForecast)
+	forecastJSON, err := json.Marshal(todayForecast)
+	os.WriteFile("forecast.json", forecastJSON, 0700)
 }
