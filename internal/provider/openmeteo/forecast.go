@@ -55,6 +55,10 @@ func getCurrentWeather(lat, lon float64) (domain.Today, error) {
 	}
 	return today, nil
 }
+func GetCurrentWeather(lat, lon float64) (domain.Today, error) {
+	forecast, err := getCurrentWeather(lat, lon)
+	return forecast, err
+}
 
 func weatherCodeToText(code int) string {
 	switch code {
