@@ -12,7 +12,7 @@ type apiResponse struct {
 		Country string  `json:"country"`
 		Lat     float64 `json:"latitude"`
 		Lon     float64 `json:"longitude"`
-	}
+	} `json:"results"`
 }
 
 func geocode(city string) (name string, lat, lon float64, err error) {
