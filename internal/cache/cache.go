@@ -21,11 +21,11 @@ func New() *TTLCache {
 func (c *TTLCache) Get(key string) (value any, fetchedAt time.Time, ok bool) {
 	entry, is := c.m[key]
 	if !is {
-		return "No record", time.Time{}, is
+		return nil, time.Time{}, false
 	}
 	if entry.expiresAt.Before(time.Now()) {
 		delete(c.m, key)
-		return "Expired", time.Time{}, false
+		return nil, time.Time{}, false
 	}
 	return entry.value, entry.fetchedAt, true
 }
