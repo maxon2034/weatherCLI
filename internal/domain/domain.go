@@ -17,17 +17,17 @@ type Today struct {
 }
 
 type HourlyEntry struct {
-	Time         []time.Time
-	TemperatureC []float64
-	POPPercent   []int
-	WindSpeedMS  []float64
+	Time         time.Time
+	TemperatureC float64
+	POPPercent   int
+	WindSpeedMS  float64
 }
 
 type DailyEntry struct {
-	Date        []time.Time
-	TempMinC    []float64
-	TempMaxC    []float64
-	POPPercent  []int
-	WindSpeedMS []float64
-	Condition   []string
+	Date        time.Time
+	TempMinC    float64
+	TempMaxC    float64
+	POPPercent  int
+	WindSpeedMS float64
+	Condition   string
 }

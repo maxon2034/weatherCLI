@@ -15,6 +15,7 @@ type Client struct {
 
 func NewClient() *Client {
 	client := Client{}
+	client.HTTPClient = &http.Client{}
 	client.HTTPClient.Timeout = time.Second * 5
 	return &client
 }
@@ -87,56 +88,56 @@ func (c *Client) GetToday(ctx context.Context, city string) (domain.Today, error
 	today.PressureHPa = forecast.Current.PressureHPa
 	today.VisibilityKm = forecast.Current.VisibilityKm
 	today.PrecipitationMm = forecast.Current.PrecipitationMm
-	today.UpdatedAt, err = time.Parse("2006-01-02", forecast.Current.UpdatedAt)
+	today.UpdatedAt, err = time.Parse("2006-01-02T15:04", forecast.Current.UpdatedAt)
 	if err != nil {
 		return domain.Today{}, fmt.Errorf("error in parsing time: %w", err)
 	}
 	return today, nil
 }
 
-func (c *Client) GetHourly(ctx context.Context, city string, hours int) (domain.HourlyEntry, error) {
-	hourly := domain.HourlyEntry{}
+func (c *Client) GetHourly(ctx context.Context, city string, hours int) ([]domain.HourlyEntry, error) {
+	hourly := make([]domain.HourlyEntry, hours)
 	_, lat, lon, err := c.geocode(ctx, city)
 	if err != nil {
-		return domain.HourlyEntry{}, fmt.Errorf("error in getting coordinates: %w", err)
+		return []domain.HourlyEntry{}, fmt.Errorf("error in getting coordinates: %w", err)
 	}
-	forecast, err := c.forecast(ctx, lat, lon, 0)
+	forecast, err := c.forecast(ctx, lat, lon, hours)
 	if err != nil {
-		return domain.HourlyEntry{}, fmt.Errorf("error in generating forecast: %w", err)
+		return []domain.HourlyEntry{}, fmt.Errorf("error in generating forecast: %w", err)
 	}
 	for i := 0; i < hours; i++ {
-		hourly.Time[i], err = time.Parse("2006-01-02T15:04", forecast.Hourly.Time[i])
+		hourly[i].Time, err = time.Parse("2006-01-02T15:04", forecast.Hourly.Time[i])
 		if err != nil {
-			return domain.HourlyEntry{}, fmt.Errorf("error in parsing time on iteration %d : %w", i, err)
+			return []domain.HourlyEntry{}, fmt.Errorf("error in parsing time on iteration %d : %w", i, err)
 		}
-		hourly.TemperatureC[i] = forecast.Hourly.TemperatureC[i]
-		hourly.POPPercent[i] = forecast.Hourly.POPPercent[i]
-		hourly.WindSpeedMS[i] = forecast.Hourly.WindSpeedMS[i]
+		hourly[i].TemperatureC = forecast.Hourly.TemperatureC[i]
+		hourly[i].POPPercent = forecast.Hourly.POPPercent[i]
+		hourly[i].WindSpeedMS = forecast.Hourly.WindSpeedMS[i]
 	}
 	return hourly, nil
 }
 
-func (c *Client) GetDaily(ctx context.Context, city string, days int) (domain.DailyEntry, error) {
-	daily := domain.DailyEntry{}
+func (c *Client) GetDaily(ctx context.Context, city string, days int) ([]domain.DailyEntry, error) {
+	daily := make([]domain.DailyEntry, days)
 	_, lat, lon, err := c.geocode(ctx, city)
 	if err != nil {
-		return domain.DailyEntry{}, fmt.Errorf("error in getting coordinates: %w", err)
+		return []domain.DailyEntry{}, fmt.Errorf("error in getting coordinates: %w", err)
 	}
 	forecast, err := c.forecast(ctx, lat, lon, days)
 	if err != nil {
-		return domain.DailyEntry{}, fmt.Errorf("error in generating forecast: %w", err)
+		return []domain.DailyEntry{}, fmt.Errorf("error in generating forecast: %w", err)
 	}
 
 	for i := 0; i < days; i++ {
-		daily.Date[i], err = time.Parse("2006-01-02", forecast.Daily.Date[i])
+		daily[i].Date, err = time.Parse("2006-01-02", forecast.Daily.Date[i])
 		if err != nil {
-			return domain.DailyEntry{}, fmt.Errorf("error in parsing time on iteration %d : %w", i, err)
+			return []domain.DailyEntry{}, fmt.Errorf("error in parsing time on iteration %d : %w", i, err)
 		}
-		daily.TempMinC[i] = forecast.Daily.TempMinC[i]
-		daily.TempMaxC[i] = forecast.Daily.TempMaxC[i]
-		daily.POPPercent[i] = forecast.Daily.POPPercent[i]
-		daily.WindSpeedMS[i] = forecast.Daily.WindSpeedMS[i]
-		daily.Condition[i] = weatherCodeToText(forecast.Daily.Condition[i])
+		daily[i].TempMinC = forecast.Daily.TempMinC[i]
+		daily[i].TempMaxC = forecast.Daily.TempMaxC[i]
+		daily[i].POPPercent = forecast.Daily.POPPercent[i]
+		daily[i].WindSpeedMS = forecast.Daily.WindSpeedMS[i]
+		daily[i].Condition = weatherCodeToText(forecast.Daily.Condition[i])
 	}
 	return daily, err
 }
