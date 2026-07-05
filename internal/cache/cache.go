@@ -23,11 +23,11 @@ func (c *TTLCache) Get(key string) (value any, fetchedAt time.Time, ok bool) {
 	if !is {
 		return "No record", time.Time{}, is
 	}
-	if entry.expiresAt.After(time.Now()) {
+	if entry.expiresAt.Before(time.Now()) {
 		delete(c.m, key)
 		return "Expired", time.Time{}, false
 	}
-	return "good record", entry.fetchedAt, true
+	return entry.value, entry.fetchedAt, true
 }
 
 func (c *TTLCache) Set(key string, value any, ttl time.Duration) {
