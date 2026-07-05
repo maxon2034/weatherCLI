@@ -1,13 +1,5 @@
 package openmeteo
 
-import (
-	"encoding/json"
-	"fmt"
-	"net/http"
-	"time"
-	"weatherCLI/internal/domain"
-)
-
 type Forecast struct {
 	Current struct {
 		TemperatureC     float64 `json:"temperature_2m"`
@@ -23,37 +15,36 @@ type Forecast struct {
 	} `json:"current"`
 }
 
-func getCurrentWeather(lat, lon float64) (domain.Today, error) {
-	forecast := Forecast{}
-	today := domain.Today{}
-	url := fmt.Sprintf("https://api.open-meteo.com/v1/forecast?latitude=%f&longitude=%f&current=temperature_2m&current=apparent_temperature&current=weather_code&wind_speed_unit=ms&current=wind_speed_10m&current=wind_direction_10m&current=relative_humidity_2m&current=pressure_msl&current=visibility&current=precipitation", lat, lon)
-	resp, err := http.Get(url)
-	if err != nil {
-		return domain.Today{}, fmt.Errorf("Error in getting response: %w", err)
-	}
-	if resp.StatusCode != http.StatusOK {
-		if resp.StatusCode == 404 {
-			return domain.Today{}, fmt.Errorf("Forecast not found")
-		}
-		return domain.Today{}, fmt.Errorf("Http error: %d", resp.StatusCode)
-	}
-	defer resp.Body.Close()
+type forecastResp struct {
+	Current struct {
+		City             string
+		TemperatureC     float64 `json:"temperature_2m"`
+		FeelsLikeC       float64 `json:"apparent_temperature"`
+		WeatherCode      int     `json:"weather_code"`
+		WindSpeedMS      float64 `json:"wind_speed_10m"`
+		WindDirectionDeg int     `json:"wind_direction_10m"`
+		HumidityPercent  int     `json:"relative_humidity_2m"`
+		PressureHPa      int     `json:"pressure_msl"`
+		VisibilityKm     float64 `json:"visibility"`
+		PrecipitationMm  float64 `json:"precipitation"`
+		UpdatedAt        string  `json:"time"`
+	} `json:"current"`
 
-	json.NewDecoder(resp.Body).Decode(&forecast)
-	today.TemperatureC = forecast.Current.TemperatureC
-	today.FeelsLikeC = forecast.Current.FeelsLikeC
-	today.Condition = weatherCodeToText(forecast.Current.WeatherCode)
-	today.WindSpeedMS = forecast.Current.WindSpeedMS
-	today.WindDirectionDeg = forecast.Current.WindDirectionDeg
-	today.HumidityPercent = forecast.Current.HumidityPercent
-	today.PressureHPa = forecast.Current.PressureHPa
-	today.VisibilityKm = forecast.Current.VisibilityKm
-	today.PrecipitationMm = forecast.Current.PrecipitationMm
-	today.UpdatedAt, err = time.Parse("2006-01-02T15:04", forecast.Current.UpdatedAt)
-	if err != nil {
-		return domain.Today{}, fmt.Errorf("Error in converting time: %w", err)
-	}
-	return today, nil
+	Hourly struct {
+		Time         []string  `json:"time"`
+		TemperatureC []float64 `json:"temperature_2m"`
+		POPPercent   []int     `json:"precipitation_probability"`
+		WindSpeedMS  []float64 `json:"wind_speed_10m"`
+	} `json:"hourly"`
+
+	Daily struct {
+		Date        []string  `json:"time"`
+		TempMinC    []float64 `json:"temperature_2m_min"`
+		TempMaxC    []float64 `json:"temperature_2m_max"`
+		POPPercent  []int     `json:"precipitation_probability_max"`
+		WindSpeedMS []float64 `json:"wind_speed_10m_max"`
+		Condition   []int     `json:"weather_code"` // API возвращает int, а не string!
+	} `json:"daily"`
 }
 
 func weatherCodeToText(code int) string {
