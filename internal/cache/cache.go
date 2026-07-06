@@ -24,18 +24,16 @@ func New() *TTLCache {
 
 func (c *TTLCache) Get(key string) (value any, fetchedAt time.Time, ok bool) {
 	c.mu.RLock()
+	defer c.mu.RUnlock()
 	entry, is := c.m[key]
-	c.mu.RUnlock()
 	if !is {
 		return nil, time.Time{}, false
 	}
 	if entry.expiresAt.After(time.Now()) {
-		if entry == c.m[key] {
-			c.mu.Lock()
-			defer c.mu.Unlock()
-			return entry.value, entry.fetchedAt, true
-		}
+		return entry.value, entry.fetchedAt, true
 	}
+	c.mu.Lock()
+	defer c.mu.Unlock()
 	delete(c.m, key)
 	return nil, time.Time{}, false
 }
