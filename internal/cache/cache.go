@@ -30,7 +30,11 @@ func (c *TTLCache) Get(key string) (value any, fetchedAt time.Time, ok bool) {
 		return nil, time.Time{}, false
 	}
 	if entry.expiresAt.After(time.Now()) {
-		return entry.value, entry.fetchedAt, true
+		c.mu.RLock()
+		defer c.mu.RUnlock()
+		if entry == c.m[key] {
+			return entry.value, entry.fetchedAt, true
+		}
 	}
 	c.mu.Lock()
 	defer c.mu.Unlock()
