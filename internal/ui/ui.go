@@ -3,6 +3,7 @@ package ui
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 	"weatherCLI/internal/cache"
 	"weatherCLI/internal/config"
@@ -78,6 +79,29 @@ func RenderToday(t domain.Today) string {
 	visPrec := fmt.Sprintln("Видимость составляет", t.VisibilityKm, "км; Количество осадков: ", t.PrecipitationMm, "мм")
 	return fmt.Sprint(header, announcement, temp, cond, windSp, humid, visPrec)
 }
+
+func RenderHourly(list []domain.HourlyEntry) string {
+	first := "Почасовой прогноз (" + strconv.Itoa(len(list)) + "час.)"
+	header := fmt.Sprintf("%-8s | %6s | %7s | %7s", "Время", "t°C", "Осадки", "Ветер м/с")
+	split := "---------+--------+---------+-----------" + "\n"
+	final := first + "\n" + split + header + "\n" + split
+	for _, v := range list {
+		final += fmt.Sprintf("%-8s | %6.1s | %6d%% |  %8.1f", v.Time.Format("15:04"), colorTemp(v.TemperatureC, fmt.Sprint(v.TemperatureC)), v.POPPercent, v.WindSpeedMS) + "\n"
+	}
+	return final + split
+}
+
+func RenderDaily(list []domain.DailyEntry) string {
+	first := "Прогноз на неделю"
+	header := fmt.Sprintf("%-9s | %-20s | %7s | %7s | %7s", "Дата", "", "Мин°C", "Макс°C", "Осадки")
+	split := "----------+----------------------+---------+--------+----------" + "\n"
+	final := first + "\n" + split + header + "\n" + split
+	for _, v := range list {
+		final += fmt.Sprintf("%-9s | %-20s | %10s |  %10s | %7d%%", v.Date.Format("02 Jan")+" "+iconForCondition(v.Condition), v.Condition, colorTemp(v.TempMinC, fmt.Sprint(v.TempMinC)), colorTemp(v.TempMaxC, fmt.Sprint(v.TempMaxC)), v.POPPercent) + "\n"
+	}
+	return final + split
+}
+
 func RenderMenu() string {
 	c := openmeteo.NewClient()
 	ctx := context.Background()
