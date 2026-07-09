@@ -25,7 +25,7 @@ func (c *Client) geocode(ctx context.Context, city string) (name string, lat, lo
 	apiResponse := apiResponse{}
 	url := "https://geocoding-api.open-meteo.com/v1/search?name=" + city
 	req, _ := http.NewRequestWithContext(ctx, "GET", url, nil)
-	err = retry.Do(ctx, 5, time.Millisecond*250, func() error {
+	err = retry.Do(ctx, 3, time.Millisecond*250, func() error {
 		resp, err := c.HTTPClient.Do(req)
 		if err != nil {
 			return err
@@ -55,7 +55,7 @@ func (c *Client) forecast(ctx context.Context, lat, lon float64, days int) (*for
 	forecast := forecastResp{}
 	url := fmt.Sprintf("https://api.open-meteo.com/v1/forecast?latitude=%f&longitude=%f&forecast_days=%d&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,relative_humidity_2m,pressure_msl,visibility,precipitation&hourly=temperature_2m,precipitation_probability,wind_speed_10m&daily=temperature_2m_min,temperature_2m_max,precipitation_probability_max,wind_speed_10m_max,weather_code", lat, lon, days)
 	req, _ := http.NewRequestWithContext(ctx, "GET", url, nil)
-	err := retry.Do(ctx, 5, time.Millisecond*250, func() error {
+	err := retry.Do(ctx, 3, time.Millisecond*250, func() error {
 		resp, err := c.HTTPClient.Do(req)
 		if err != nil {
 			return fmt.Errorf("Error in getting response: %w", err)
