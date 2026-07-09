@@ -76,13 +76,26 @@ func RenderToday(t domain.Today) string {
 	windSp := fmt.Sprintln("Скорость ветра:", t.WindSpeedMS, "; Направление ветра: ", t.WindDirectionDeg, "°")
 	humid := fmt.Sprintln("Влажность воздуха: ", t.HumidityPercent, "%; Атмосферное давление: ", t.PressureHPa, " ГПа")
 	visPrec := fmt.Sprintln("Видимость составляет", t.VisibilityKm, "км; Количество осадков: ", t.PrecipitationMm, "мм")
-	split := "────────────────────────────────────────────────────────────\n"
-
-	menu := "[1] Почасовой (12 ч)  [2] На 7 дней  [C] Сменить город  [R] Обновить  [Q] Выход"
-	return fmt.Sprint(header, announcement, temp, cond, windSp, humid, visPrec, split, menu)
+	return fmt.Sprint(header, announcement, temp, cond, windSp, humid, visPrec)
 }
-
 func RenderMenu() string {
+	c := openmeteo.NewClient()
+	ctx := context.Background()
+
+	conf, err := config.Load()
+	if err != nil {
+		return fmt.Sprint("Error in loading configuration:", err)
+	}
+	defCity := conf.DefaultCity
+	today, err := c.GetToday(ctx, defCity)
+	if err != nil {
+		return fmt.Sprint("Error in getting today's forecast: ", err)
+	}
+	split := "────────────────────────────────────────────────────────────\n"
+	menu := "[1] Почасовой (12 ч)  [2] На 7 дней  [C] Сменить город  [R] Обновить  [Q] Выход"
+	return RenderToday(today) + split + menu
+}
+func RenderMenuMine() string {
 	c := openmeteo.NewClient()
 	ctx := context.Background()
 
