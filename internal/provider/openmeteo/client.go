@@ -26,28 +26,27 @@ func (c *Client) geocode(ctx context.Context, city string) (name string, lat, lo
 	url := "https://geocoding-api.open-meteo.com/v1/search?name=" + city
 	req, _ := http.NewRequestWithContext(ctx, "GET", url, nil)
 	err = retry.Do(ctx, 5, time.Millisecond*250, func() error {
-		_, err := c.HTTPClient.Do(req)
+		resp, err := c.HTTPClient.Do(req)
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode != http.StatusOK {
+			if resp.StatusCode == 404 {
+				return fmt.Errorf("City is not found")
+			}
+			return fmt.Errorf("unexpected status: %d", resp.StatusCode)
+		}
+
+		err = json.NewDecoder(resp.Body).Decode(&apiResponse)
+		if err != nil {
+			return fmt.Errorf("Error in decoding json: %w", err)
+		}
 		return err
 	})
 	if err != nil {
 		return "", 0, 0, fmt.Errorf("Error in network availabilty: %w", err)
-	}
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return "", 0, 0, fmt.Errorf("Error in http get: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		if resp.StatusCode == 404 {
-			return "", 0, 0, fmt.Errorf("City is not found")
-		}
-		return "", 0, 0, fmt.Errorf("unexpected status: %d", resp.StatusCode)
-	}
-
-	err = json.NewDecoder(resp.Body).Decode(&apiResponse)
-	if err != nil {
-		return "", 0, 0, fmt.Errorf("Error in decoding json: %w", err)
 	}
 	return apiResponse.Results[0].Name, apiResponse.Results[0].Lat, apiResponse.Results[0].Lon, nil
 }
@@ -57,27 +56,26 @@ func (c *Client) forecast(ctx context.Context, lat, lon float64, days int) (*for
 	url := fmt.Sprintf("https://api.open-meteo.com/v1/forecast?latitude=%f&longitude=%f&forecast_days=%d&current=temperature_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,relative_humidity_2m,pressure_msl,visibility,precipitation&hourly=temperature_2m,precipitation_probability,wind_speed_10m&daily=temperature_2m_min,temperature_2m_max,precipitation_probability_max,wind_speed_10m_max,weather_code", lat, lon, days)
 	req, _ := http.NewRequestWithContext(ctx, "GET", url, nil)
 	err := retry.Do(ctx, 5, time.Millisecond*250, func() error {
-		_, err := c.HTTPClient.Do(req)
+		resp, err := c.HTTPClient.Do(req)
+		if err != nil {
+			return fmt.Errorf("Error in getting response: %w", err)
+		}
+		if resp.StatusCode != http.StatusOK {
+			if resp.StatusCode == 404 {
+				return fmt.Errorf("Forecast not found")
+			}
+			return fmt.Errorf("Http error: %d", resp.StatusCode)
+		}
+		defer resp.Body.Close()
+
+		err = json.NewDecoder(resp.Body).Decode(&forecast)
+		if err != nil {
+			return fmt.Errorf("Error in converting time: %w", err)
+		}
 		return err
 	})
 	if err != nil {
 		return &forecastResp{}, fmt.Errorf("Error in network availabilty: %w", err)
-	}
-	resp, err := c.HTTPClient.Do(req)
-	if err != nil {
-		return &forecastResp{}, fmt.Errorf("Error in getting response: %w", err)
-	}
-	if resp.StatusCode != http.StatusOK {
-		if resp.StatusCode == 404 {
-			return &forecastResp{}, fmt.Errorf("Forecast not found")
-		}
-		return &forecastResp{}, fmt.Errorf("Http error: %d", resp.StatusCode)
-	}
-	defer resp.Body.Close()
-
-	err = json.NewDecoder(resp.Body).Decode(&forecast)
-	if err != nil {
-		return &forecastResp{}, fmt.Errorf("Error in converting time: %w", err)
 	}
 	return &forecast, nil
 }
