@@ -156,18 +156,3 @@ func (c *Client) GetDaily(ctx context.Context, city string, days int) ([]domain.
 	}
 	return daily, err
 }
-
-func (c *Client) GetTodayFormatted(ctx context.Context, city string) (string, error) {
-	today, err := c.GetToday(ctx, city)
-	if err != nil {
-		return "", fmt.Errorf("Unable to format the forecast: %w", err)
-	}
-	forecast := "Прогноз погоды на " + today.UpdatedAt.Format("01-02-2006 15:04") + "\n"
-	cityF := fmt.Sprintln("Город: ", today.City)
-	temp := fmt.Sprintln("Температура воздуха: ", today.TemperatureC, "°С (ощущается как ", today.FeelsLikeC, "°С)")
-	cond := today.Condition + "\n"
-	windSp := fmt.Sprintln("Скорость ветра:", today.WindSpeedMS, "; Направление ветра: ", today.WindDirectionDeg, "°")
-	humid := fmt.Sprintln("Влажность воздуха: ", today.HumidityPercent, "%; Атмосферное давление: ", today.PressureHPa, " ГПа")
-	visPrec := fmt.Sprintln("Видимость составляет", today.VisibilityKm, "км; Количество осадков: ", today.PrecipitationMm, "мм")
-	return fmt.Sprint(forecast, cityF, temp, cond, windSp, humid, visPrec), nil
-}

@@ -10,7 +10,7 @@ type Today struct {
 	WindSpeedMS      float64
 	WindDirectionDeg int
 	HumidityPercent  int
-	PressureHPa      int
+	PressureHPa      float64
 	VisibilityKm     float64
 	PrecipitationMm  float64
 	UpdatedAt        time.Time

@@ -1,20 +1,5 @@
 package openmeteo
 
-type Forecast struct {
-	Current struct {
-		TemperatureC     float64 `json:"temperature_2m"`
-		FeelsLikeC       float64 `json:"apparent_temperature"`
-		WeatherCode      int     `json:"weather_code"`
-		WindSpeedMS      float64 `json:"wind_speed_10m"`
-		WindDirectionDeg int     `json:"wind_direction_10m"`
-		HumidityPercent  int     `json:"relative_humidity_2m"`
-		PressureHPa      int     `json:"pressure_msl"`
-		VisibilityKm     float64 `json:"visibility"`
-		PrecipitationMm  float64 `json:"precipitation"`
-		UpdatedAt        string  `json:"time"`
-	} `json:"current"`
-}
-
 type forecastResp struct {
 	Current struct {
 		City             string
@@ -24,7 +9,7 @@ type forecastResp struct {
 		WindSpeedMS      float64 `json:"wind_speed_10m"`
 		WindDirectionDeg int     `json:"wind_direction_10m"`
 		HumidityPercent  int     `json:"relative_humidity_2m"`
-		PressureHPa      int     `json:"pressure_msl"`
+		PressureHPa      float64 `json:"pressure_msl"`
 		VisibilityKm     float64 `json:"visibility"`
 		PrecipitationMm  float64 `json:"precipitation"`
 		UpdatedAt        string  `json:"time"`
@@ -50,7 +35,7 @@ type forecastResp struct {
 func weatherCodeToText(code int) string {
 	switch code {
 	case 0:
-		return "Ясное небо"
+		return "Ясно"
 	case 1:
 		return "Преимущественно ясно"
 	case 2:
@@ -60,17 +45,17 @@ func weatherCodeToText(code int) string {
 	case 45:
 		return "Туман"
 	case 48:
-		return "Иней с выпадением осадков"
+		return "Осаждающийся туман (изморозь)"
 	case 51:
-		return "Легкий струйный полив"
-	case 52:
-		return "Умеренный струйный полив"
+		return "Слабая морось"
 	case 53:
-		return "Плотный струйный полив"
+		return "Умеренная морось"
+	case 55:
+		return "Интенсивная морось"
 	case 56:
-		return "Легкая ледяная морось"
+		return "Слабая переохлажденная морось"
 	case 57:
-		return "Насыщенная ледяная морось"
+		return "Интенсивная переохлажденная морось"
 	case 61:
 		return "Слабый дождь"
 	case 63:
@@ -78,9 +63,9 @@ func weatherCodeToText(code int) string {
 	case 65:
 		return "Сильный дождь"
 	case 66:
-		return "Слабый ледяной дождь"
+		return "Слабый переохлажденный дождь"
 	case 67:
-		return "Легкий ледяной дождь"
+		return "Сильный переохлажденный дождь"
 	case 71:
 		return "Слабый снегопад"
 	case 73:
@@ -88,24 +73,24 @@ func weatherCodeToText(code int) string {
 	case 75:
 		return "Сильный снегопад"
 	case 77:
-		return "Град"
+		return "Снежные зерна"
 	case 80:
-		return "Легкий ливень"
+		return "Слабый ливневый дождь"
 	case 81:
-		return "Умеренный ливень"
+		return "Умеренный ливневый дождь"
 	case 82:
-		return "Жестокий ливень"
+		return "Сильный ливневый дождь"
 	case 85:
-		return "Легкий дождь со снегом"
+		return "Слабый ливневый снег"
 	case 86:
-		return "Сильный дождь со снегом"
+		return "Сильный ливневый снег"
 	case 95:
-		return "Гром"
+		return "Гроза"
 	case 96:
-		return "Гром с легким градом"
+		return "Гроза со слабым градом"
 	case 99:
-		return "Гром с сильным градом"
+		return "Гроза с сильным градом"
 	default:
-		return ""
+		return "Неизвестные погодные условия"
 	}
 }
