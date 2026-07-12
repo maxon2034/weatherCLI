@@ -72,7 +72,12 @@ func RenderToday(t domain.Today) string {
 	icon := iconForCondition(t.Condition)
 	announcement := "Сегодня в " + t.City + " [ " + icon + " ]\n"
 
-	temp := "Температура воздуха: " + colorTemp(t.TemperatureC, fmt.Sprint(t.TemperatureC)) + "°С (ощущается как " + colorTemp(t.FeelsLikeC, fmt.Sprint(t.FeelsLikeC)) + "°С)\n"
+	// Здесь жесткое выравнивание не критично, так как это не таблица,
+	// но передаем просто чистые строки температуры в цвет
+	tempStr := fmt.Sprintf("%.1f", t.TemperatureC)
+	feelsStr := fmt.Sprintf("%.1f", t.FeelsLikeC)
+
+	temp := "Температура воздуха: " + colorTemp(t.TemperatureC, tempStr) + "°С (ощущается как " + colorTemp(t.FeelsLikeC, feelsStr) + "°С)\n"
 	cond := "Условия: " + t.Condition + "\n"
 	windSp := fmt.Sprintln("Скорость ветра:", t.WindSpeedMS, "; Направление ветра: ", t.WindDirectionDeg, "°")
 	humid := fmt.Sprintln("Влажность воздуха: ", t.HumidityPercent, "%; Атмосферное давление: ", t.PressureHPa, " ГПа")
@@ -81,23 +86,39 @@ func RenderToday(t domain.Today) string {
 }
 
 func RenderHourly(list []domain.HourlyEntry) string {
-	first := "Почасовой прогноз (" + strconv.Itoa(len(list)) + "час.)"
-	header := fmt.Sprintf("%-8s | %6s | %7s | %7s", "Время", "t°C", "Осадки", "Ветер м/с")
-	split := "---------+--------+---------+-----------" + "\n"
+	first := "Почасовой прогноз (" + strconv.Itoa(len(list)) + " час.)"
+	header := fmt.Sprintf("%-8s | %6s | %7s | %10s", "Время", "t°C", "Осадки", "Ветер м/с")
+	split := "---------+--------+---------+------------" + "\n"
 	final := first + "\n" + split + header + "\n" + split
 	for _, v := range list {
-		final += fmt.Sprintf("%-8s | %6.1s | %6d%% |  %8.1f", v.Time.Format("15:04"), colorTemp(v.TemperatureC, fmt.Sprint(v.TemperatureC)), v.POPPercent, v.WindSpeedMS) + "\n"
+		// 1. Форматируем температуру в строку с фиксированной шириной (например, 5 символов: " 21.3")
+		rawTempStr := fmt.Sprintf("%5.1f", v.TemperatureC)
+		// 2. Раскрашиваем уже выровненную строку
+		coloredTemp := colorTemp(v.TemperatureC, rawTempStr)
+
+		// Выводим %s без дополнительного указания ширины для температуры, так как она уже отформатирована
+		final += fmt.Sprintf("%-8s | %s  | %6d%% | %10.1f", v.Time.Format("15:04"), coloredTemp, v.POPPercent, v.WindSpeedMS) + "\n"
 	}
 	return final + split
 }
 
 func RenderDaily(list []domain.DailyEntry) string {
 	first := "Прогноз на неделю"
-	header := fmt.Sprintf("%-9s | %-20s | %7s | %7s | %7s", "Дата", "", "Мин°C", "Макс°C", "Осадки")
-	split := "----------+----------------------+---------+--------+----------" + "\n"
+	header := fmt.Sprintf("%-12s | %-20s | %6s | %6s | %7s", "Дата", "Условия", "Мин°C", "Макс°C", "Осадки")
+	split := "-------------+----------------------+--------+--------+----------" + "\n"
 	final := first + "\n" + split + header + "\n" + split
 	for _, v := range list {
-		final += fmt.Sprintf("%-9s | %-20s | %10s |  %10s | %7d%%", v.Date.Format("02 Jan")+" "+iconForCondition(v.Condition), v.Condition, colorTemp(v.TempMinC, fmt.Sprint(v.TempMinC)), colorTemp(v.TempMaxC, fmt.Sprint(v.TempMaxC)), v.POPPercent) + "\n"
+		// Форматируем отдельно минимальную и максимальную температуру под ширину 5 символов
+		rawMinStr := fmt.Sprintf("%5.1f", v.TempMinC)
+		rawMaxStr := fmt.Sprintf("%5.1f", v.TempMaxC)
+
+		coloredMin := colorTemp(v.TempMinC, rawMinStr)
+		coloredMax := colorTemp(v.TempMaxC, rawMaxStr)
+
+		// Объединяем иконку и дату, задаем фиксированную ширину (например, 12 символов под дату с иконкой)
+		dateWithIcon := v.Date.Format("02 Jan") + " " + iconForCondition(v.Condition)
+
+		final += fmt.Sprintf("%-12s | %-20s | %s | %s | %7d%%", dateWithIcon, v.Condition, coloredMin, coloredMax, v.POPPercent) + "\n"
 	}
 	return final + split
 }
