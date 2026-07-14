@@ -1,0 +1,23 @@
+# Бинарные файлы сборки
+weather
+weathercli
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Конфигурация с персональными данными
+conf.yaml
+config.yaml
+internal/config/conf.yaml
+internal/config/config.yaml
+
+# IDE-специфичные файлы
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
