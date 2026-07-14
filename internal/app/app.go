@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 	"weatherCLI/internal/cache"
 	"weatherCLI/internal/config"
 	"weatherCLI/internal/provider"
@@ -42,6 +43,7 @@ func Run() error {
 	reader := bufio.NewReader(os.Stdin)
 
 	today, err := client.GetToday(ctx, app.city)
+	app.cache.Set("today:"+app.city, today, 5*time.Minute)
 	if err != nil {
 		return fmt.Errorf("Error in generating today's forecast with %s city: %w", app.city, err)
 	}
@@ -54,7 +56,9 @@ func Run() error {
 
 		switch strings.ToLower(input) {
 		case "1":
+
 			list, err := client.GetHourly(ctx, app.city, 12)
+			app.cache.Set("hourly:"+app.city, list, 15*time.Minute)
 			if err != nil {
 				return fmt.Errorf("Error in generating hourly forecast: %w", err)
 			}
@@ -62,6 +66,7 @@ func Run() error {
 			fmt.Println(ui.RenderMenu())
 		case "2":
 			list, err := client.GetDaily(ctx, app.city, 7)
+			app.cache.Set("daily:"+app.city, list, 30*time.Minute)
 			if err != nil {
 				return fmt.Errorf("Error in generating hourly forecast: %w", err)
 			}
@@ -74,13 +79,19 @@ func Run() error {
 			input = strings.TrimSpace(input)
 			app.city = input
 			forecast, err := client.GetToday(ctx, app.city)
+			app.cache.Set("today:"+app.city, forecast, 5*time.Minute)
 			if err != nil {
 				return fmt.Errorf("Error in generating today's forecast with %s city: %w", input, err)
+			}
+			err = config.Save(app.config)
+			if err != nil {
+				return fmt.Errorf("Error in saving new configuration: %w", err)
 			}
 			fmt.Println(ui.RenderToday(forecast))
 			fmt.Println(ui.RenderMenu())
 		case "r":
 			today, err := client.GetToday(ctx, app.city)
+			app.cache.Set("today:"+app.city, today, 5*time.Minute)
 			if err != nil {
 				return fmt.Errorf("Error in generating today's forecast with %s city: %w", app.city, err)
 			}

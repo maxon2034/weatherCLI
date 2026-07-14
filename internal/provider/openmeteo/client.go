@@ -33,7 +33,7 @@ func (c *Client) geocode(ctx context.Context, city string) (name string, lat, lo
 		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusOK {
-			if resp.StatusCode == 404 {
+			if resp.StatusCode == 403 {
 				return fmt.Errorf("City is not found")
 			}
 			return fmt.Errorf("unexpected status: %d", resp.StatusCode)
@@ -46,7 +46,7 @@ func (c *Client) geocode(ctx context.Context, city string) (name string, lat, lo
 		return err
 	})
 	if err != nil {
-		return "", 0, 0, fmt.Errorf("Error in network availabilty: %w", err)
+		return "", 0, 0, err
 	}
 	return apiResponse.Results[0].Name, apiResponse.Results[0].Lat, apiResponse.Results[0].Lon, nil
 }
