@@ -1,14 +1,11 @@
 package ui
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 	"time"
 	"weatherCLI/internal/cache"
-	"weatherCLI/internal/config"
 	"weatherCLI/internal/domain"
-	"weatherCLI/internal/provider/openmeteo"
 )
 
 func colorTemp(celsius float64, text string) string {
@@ -124,55 +121,7 @@ func RenderDaily(list []domain.DailyEntry) string {
 }
 
 func RenderMenu() string {
-	c := openmeteo.NewClient()
-	ctx := context.Background()
-
-	conf, err := config.Load()
-	if err != nil {
-		return fmt.Sprint("Error in loading configuration:", err)
-	}
-	defCity := conf.DefaultCity
-	today, err := c.GetToday(ctx, defCity)
-	if err != nil {
-		return fmt.Sprint("Error in getting today's forecast: ", err)
-	}
 	split := "────────────────────────────────────────────────────────────\n"
 	menu := "[1] Почасовой (12 ч)  [2] На 7 дней  [C] Сменить город  [R] Обновить  [Q] Выход"
-	return RenderToday(today) + split + menu
-}
-func RenderMenuMine() string {
-	c := openmeteo.NewClient()
-	ctx := context.Background()
-
-	conf, err := config.Load()
-	if err != nil {
-		return fmt.Sprint("Error in loading configuration:", err)
-	}
-	defCity := conf.DefaultCity
-	today, err := c.GetToday(ctx, defCity)
-	if err != nil {
-		return fmt.Sprint("Error in getting today's forecast: ", err)
-	}
-	fmt.Println(RenderToday(today))
-OuterLoop:
-	for {
-		var input string
-		fmt.Scan(&input)
-		switch input {
-		case "1":
-			fmt.Println("in progress...")
-			time.Sleep(5 * time.Second)
-			fmt.Println(RenderToday(today))
-			continue
-		case "2":
-			fmt.Println("in regress..")
-			time.Sleep(5 * time.Second)
-			fmt.Println(RenderToday(today))
-			continue
-		case "Q", "q":
-			fmt.Println("Спасибо за то, что остаетесь с нами")
-			break OuterLoop
-		}
-	}
-	return ""
+	return split + menu
 }
